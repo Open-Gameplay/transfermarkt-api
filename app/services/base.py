@@ -1,15 +1,34 @@
 from dataclasses import dataclass, field
+import random
 from typing import Optional
 from xml.etree import ElementTree
 
-import requests
+# curl_cffi impersonates a real browser TLS fingerprint + matching UA. Fall back
+# to plain requests if it is not installed (exotic platforms).
+try:
+    from curl_cffi import requests
+    from curl_cffi.requests import exceptions as requests_exceptions
+    _BACKEND = "curl_cffi"
+except ImportError:
+    import requests
+    from requests import exceptions as requests_exceptions
+    _BACKEND = "requests"
+
 from bs4 import BeautifulSoup
 from fastapi import HTTPException
 from lxml import etree
-from requests import Response, TooManyRedirects
+from requests import Response  # noqa: F401 - used in type annotations
 
 from app.utils.utils import trim
 from app.utils.xpath import Pagination
+
+# Rotate the impersonated browser per request so the traffic does not look like
+# one static bot fingerprint. Each entry carries a consistent TLS+UA.
+_IMPERSONATE_POOL = ("chrome131", "chrome130", "chrome127", "firefox131", "firefox128")
+_FALLBACK_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+)
 
 
 @dataclass
@@ -45,32 +64,31 @@ class TransfermarktBase:
         """
         url = self.URL if not url else url
         try:
-            response: Response = requests.get(
-                url=url,
-                headers={
-                    "User-Agent": (
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                        "AppleWebKit/537.36 (KHTML, like Gecko) "
-                        "Chrome/113.0.0.0 "
-                        "Safari/537.36"
-                    ),
-                },
-            )
-        except TooManyRedirects:
+            if _BACKEND == "curl_cffi":
+                response = requests.get(
+                    url=url,
+                    impersonate=random.choice(_IMPERSONATE_POOL),
+                )
+            else:
+                response = requests.get(
+                    url=url,
+                    headers={"User-Agent": _FALLBACK_UA},
+                )
+        except requests_exceptions.TooManyRedirects:
             raise HTTPException(status_code=404, detail=f"Not found for url: {url}")
-        except ConnectionError:
+        except requests_exceptions.ConnectionError:
             raise HTTPException(status_code=500, detail=f"Connection error for url: {url}")
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error for url: {url}. {e}")
         if 400 <= response.status_code < 500:
             raise HTTPException(
                 status_code=response.status_code,
-                detail=f"Client Error. {response.reason} for url: {url}",
+                detail=f"Client Error. HTTP {response.status_code} for url: {url}",
             )
         elif 500 <= response.status_code < 600:
             raise HTTPException(
                 status_code=response.status_code,
-                detail=f"Server Error. {response.reason} for url: {url}",
+                detail=f"Server Error. HTTP {response.status_code} for url: {url}",
             )
         return response
 
