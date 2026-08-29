@@ -23,8 +23,13 @@ from app.utils.utils import trim
 from app.utils.xpath import Pagination
 
 # Rotate the impersonated browser per request so the traffic does not look like
-# one static bot fingerprint. Each entry carries a consistent TLS+UA.
-_IMPERSONATE_POOL = ("chrome131", "chrome130", "chrome127", "firefox131", "firefox128")
+# one static bot fingerprint. Each entry carries a consistent TLS+UA. Only use
+# versions the installed curl_cffi supports (checked against 0.16.x).
+_IMPERSONATE_POOL = (
+    "chrome131", "chrome133a", "chrome136",
+    "firefox135", "firefox144",
+    "edge101",
+)
 _FALLBACK_UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
