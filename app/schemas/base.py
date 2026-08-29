@@ -82,7 +82,11 @@ class TransfermarktBaseModel(BaseModel):
     def parse_height(cls, v: str) -> Optional[int]:
         if not v or not any(char.isdigit() for char in v):
             return None
-        return int(v.replace(",", "").replace("m", "").replace("،", ""))
+        # TM uses locale-dependent formats: "1,83m", "1.83m", "1'83m", "1′83m"
+        # (even a Unicode prime as decimal separator) or plain cm "190".
+        # Height is always "N,xxm" or "NNN" — digits-only extraction is safe.
+        digits = "".join(ch for ch in v if ch.isdigit())
+        return int(digits)
 
     @field_validator("days", mode="before", check_fields=False)
     def parse_days(cls, v: str) -> Optional[int]:
