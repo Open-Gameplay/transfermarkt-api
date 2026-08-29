@@ -30,6 +30,14 @@ def extract_from_url(tfmkt_url: Optional[str], element: str = "id") -> Optional[
     if not tfmkt_url:
         return None
 
+    url: str = trim(tfmkt_url)
+    if not url:
+        return None
+
+    # strip scheme and host, so absolute URLs (e.g. canonical links)
+    # match the same way as relative paths do
+    url = re.sub(r"^https?://[^/]+", "", url)
+
     regex: str = (
         r"/(?P<code>[\w%-]+)"
         r"/(?P<category>[\w-]+)"
@@ -40,8 +48,8 @@ def extract_from_url(tfmkt_url: Optional[str], element: str = "id") -> Optional[
     )
 
     try:
-        groups: dict = re.match(regex, trim(tfmkt_url)).groupdict()
-    except TypeError:
+        groups: dict = re.match(regex, url).groupdict()
+    except (TypeError, AttributeError):
         return None
     return groups.get(element)
 

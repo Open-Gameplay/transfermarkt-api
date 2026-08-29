@@ -213,9 +213,10 @@ class NationalTeams:
         ROWS = "//table[contains(@class, 'items')]//tbody//tr[@class='odd' or @class='even']"
         PLAYER_URL = ".//td[contains(@class, 'hauptlink')]//a[contains(@href, '/profil/spieler/')]/@href"
         PLAYER_NAME = ".//td[contains(@class, 'hauptlink')]//a[contains(@href, '/profil/spieler/')]/text()"
+        SHIRT_NUMBER = ".//td[contains(@class, 'rueckennummer')]//text()"
         POSITION = ".//td[contains(@class, 'rueckennummer')]/@title"
-        AGE = ".//td[contains(@class, 'zentriert')][1]//text()"
-        CLUB_NAME = ".//td[contains(@class, 'zentriert')]//a//img/@title"
+        AGE = ".//td[contains(@class, 'zentriert')][2]//text()"
+        CLUB_NAME = ".//td[contains(@class, 'zentriert')]//a//img//@title"
         MARKET_VALUE = ".//td[contains(@class, 'rechts') and contains(@class, 'hauptlink')]//a//text()"
 
 

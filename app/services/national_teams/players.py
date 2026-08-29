@@ -36,6 +36,7 @@ class TransfermarktNationalTeamPlayers(TransfermarktBase):
         for row in rows:
             player_url = row.xpath(NationalTeams.Players.PLAYER_URL)
             player_name = row.xpath(NationalTeams.Players.PLAYER_NAME)
+            shirt_number = row.xpath(NationalTeams.Players.SHIRT_NUMBER)
             position = row.xpath(NationalTeams.Players.POSITION)
             age = row.xpath(NationalTeams.Players.AGE)
             club_name = row.xpath(NationalTeams.Players.CLUB_NAME)
@@ -46,6 +47,7 @@ class TransfermarktNationalTeamPlayers(TransfermarktBase):
                 {
                     "id": extract_from_url(player_url) if player_url else None,
                     "name": player_name[0].strip() if player_name else None,
+                    "shirtNumber": shirt_number[0].strip() if shirt_number else None,
                     "position": position[-1].strip() if position else None,
                     "age": age[0].strip() if age else None,
                     "club": club_name[0].strip() if club_name else None,
