@@ -20,6 +20,7 @@ class ClubPlayer(TransfermarktBaseModel):
     contract: Optional[date] = None
     market_value: Optional[int] = None
     status: Optional[str] = ""
+    image_url: Optional[str] = None
 
 
 class ClubPlayers(TransfermarktBaseModel, AuditMixin):

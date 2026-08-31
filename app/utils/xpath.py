@@ -161,6 +161,8 @@ class Clubs:
         MARKET_VALUES = "//td[@class='rechts hauptlink']//text()"
         STATUSES = ".//td[@class='hauptlink']//span//@title"
         JOINED_ON = ".//text()"
+        # player portrait: TM lazy-loads it (data-src) inside the posrela cell
+        PHOTO = ".//img[contains(@data-src, 'portrait')]/@data-src"
 
         class Present:
             PAGE_SIGNED_FROM = "//div[@id='yw1']//td[8]"

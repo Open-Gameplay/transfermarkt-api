@@ -81,6 +81,8 @@ class TransfermarktClubPlayers(TransfermarktBase):
         )
         players_marketvalues = self.get_list_by_xpath(Clubs.Players.MARKET_VALUES)
         players_statuses = ["; ".join(e.xpath(Clubs.Players.STATUSES)) for e in page_players_infos if e is not None]
+        # portrait per player row (aligned with page_players_infos == one posrela td per player)
+        players_photos = [", ".join(e.xpath(Clubs.Players.PHOTO)) for e in page_players_infos]
 
         return [
             {
@@ -99,8 +101,9 @@ class TransfermarktClubPlayers(TransfermarktBase):
                 "contract": contract,
                 "marketValue": market_value,
                 "status": status,
+                "imageUrl": image_url,
             }
-            for idx, name, position, dob, age, nationality, current_club, height, foot, joined_on, joined, signed_from, contract, market_value, status, in zip(  # noqa: E501
+            for idx, name, position, dob, age, nationality, current_club, height, foot, joined_on, joined, signed_from, contract, market_value, status, image_url, in zip(  # noqa: E501
                 players_ids,
                 players_names,
                 players_positions,
@@ -116,6 +119,7 @@ class TransfermarktClubPlayers(TransfermarktBase):
                 players_contracts,
                 players_marketvalues,
                 players_statuses,
+                players_photos,
             )
         ]
 
