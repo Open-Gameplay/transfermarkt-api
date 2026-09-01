@@ -1,77 +1,93 @@
 import json
 from dataclasses import dataclass
+import logging
 
 from app.services.base import TransfermarktBase
-from app.utils.regex import REGEX_CHART_CLUB_ID
-from app.utils.utils import safe_regex, zip_lists_into_dict
-from app.utils.xpath import Players
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
 class TransfermarktPlayerMarketValue(TransfermarktBase):
     """
-    Represents a service for retrieving and parsing the market value history of a football player on Transfermarkt.
+    Retrieves market value history from the tmapi JSON endpoint.
+
+    Uses https://tmapi.transfermarkt.technology/player/{id}/market-value-history
+    instead of scraping the HTML page (which gets blocked after ~15-20 requests).
 
     Args:
         player_id (str): The unique identifier of the player.
-
-    Attributes:
-        URL (str): The URL to fetch the player's market value data.
-        URL_MARKET_VALUE (str): The URL to fetch the player's market value history chart data.
     """
 
     player_id: str = None
     URL: str = "https://www.transfermarkt.com/-/marktwertverlauf/spieler/{player_id}"
-    URL_MARKET_VALUE: str = "https://www.transfermarkt.com/ceapi/marketValueDevelopment/graph/{player_id}"
+    URL_TMAPI: str = "https://tmapi.transfermarkt.technology/player/{player_id}/market-value-history"
 
     def __post_init__(self) -> None:
-        """Initialize the TransfermarktPlayerMarketValue class."""
         self.URL = self.URL.format(player_id=self.player_id)
-        self.page = self.request_url_page()
-        self.raise_exception_if_not_found(xpath=Players.Profile.NAME)
-        self.market_value_chart = self.make_request(url=self.URL_MARKET_VALUE.format(player_id=self.player_id))
+        self.URL_TMAPI = self.URL_TMAPI.format(player_id=self.player_id)
+        try:
+            self.market_value_data = self.make_request(url=self.URL_TMAPI)
+        except Exception as e:
+            logger.error("Failed to fetch tmapi market value for player %s: %s", self.player_id, e)
+            self.market_value_data = None
 
     def __parse_market_value_history(self) -> list:
-        """
-        Parse the market value history of a football player from the retrieved data.
+        """Parse market value history from tmapi JSON."""
+        if self.market_value_data is None:
+            return []
 
-        Returns:
-            list: A list of dictionaries, where each dictionary represents a data point in the
-                player's market value history. Each dictionary contains keys 'date', 'age',
-                'clubID', 'clubName', and 'value' with their respective values.
-        """
-        data = json.loads(self.market_value_chart.content).get("list")
+        try:
+            resp = json.loads(self.market_value_data.content)
+            data = resp.get("data", {})
+        except (json.JSONDecodeError, AttributeError, TypeError):
+            return []
 
-        club_image = None
-        for entry in data:
-            entry["date"] = entry.pop("datum_mw")
-            entry["clubName"] = entry.pop("verein")
-            entry["marketValue"] = entry.pop("mw")
-            if not entry.get("wappen"):
-                entry["wappen"] = club_image
-            else:
-                club_image = entry["wappen"]
-            entry["clubId"] = safe_regex(entry["wappen"], REGEX_CHART_CLUB_ID, "club_id")
+        history = data.get("history", [])
+        result = []
+        for entry in history:
+            mv = entry.get("marketValue", {})
+            result.append({
+                "age": entry.get("age"),
+                "date": mv.get("determined"),
+                "clubId": str(entry.get("clubId", "")),
+                "clubName": str(entry.get("clubId", "")),  # tmapi doesn't include club name, use ID
+                "marketValue": mv.get("value"),
+            })
 
-        return [
-            {key: entry[key] for key in entry if key in ["date", "age", "clubId", "clubName", "marketValue"]}
-            for entry in data
-        ]
+        return result
 
     def get_player_market_value(self) -> dict:
         """
-        Retrieve and parse the market value history of a football player.
+        Retrieve market value history from tmapi.
 
-        Returns:
-            dict: A dictionary containing the player's unique identifier, current market value,
-                market value history, ranking, and the timestamp of when the data was last updated.
+        Returns a dict with the same keys as the old HTML scraper for backward compatibility.
         """
         self.response["id"] = self.player_id
-        self.response["marketValue"] = self.get_text_by_xpath(Players.MarketValue.CURRENT, join_str="")
+
+        if self.market_value_data is None:
+            self.response["marketValue"] = None
+            self.response["marketValueHistory"] = []
+            self.response["ranking"] = {}
+            return self.response
+
+        try:
+            resp = json.loads(self.market_value_data.content)
+            data = resp.get("data", {})
+        except (json.JSONDecodeError, AttributeError, TypeError):
+            self.response["marketValue"] = None
+            self.response["marketValueHistory"] = []
+            self.response["ranking"] = {}
+            return self.response
+
+        # Current market value from the data
+        current = data.get("current", {})
+        self.response["marketValue"] = current.get("marketValue", {}).get("value")
+
+        # Parse history
         self.response["marketValueHistory"] = self.__parse_market_value_history()
-        self.response["ranking"] = zip_lists_into_dict(
-            self.get_list_by_xpath(Players.MarketValue.RANKINGS_NAMES),
-            self.get_list_by_xpath(Players.MarketValue.RANKINGS_POSITIONS),
-        )
+
+        # Ranking (not available in tmapi, return empty)
+        self.response["ranking"] = {}
 
         return self.response

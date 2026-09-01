@@ -5,10 +5,10 @@ from app.schemas.base import TransfermarktBaseModel
 
 
 class ClubSquad(TransfermarktBaseModel):
-    size: int
-    average_age: float
-    foreigners: int
-    national_team_players: int
+    size: Optional[int] = None
+    average_age: Optional[float] = None
+    foreigners: Optional[int] = None
+    national_team_players: Optional[int] = None
 
 
 class ClubLeague(TransfermarktBaseModel):
@@ -24,7 +24,7 @@ class ClubProfile(TransfermarktBaseModel):
     url: str
     name: str
     official_name: Optional[str] = None
-    image: str
+    image: Optional[str] = None
     legal_form: Optional[str] = None
     address_line_1: Optional[str] = None
     address_line_2: Optional[str] = None
@@ -37,12 +37,12 @@ class ClubProfile(TransfermarktBaseModel):
     members_date: Optional[date] = None
     other_sports: Optional[list[str]] = None
     colors: Optional[list[str]] = []
-    stadium_name: str
-    stadium_seats: int
-    current_transfer_record: int
+    stadium_name: Optional[str] = None
+    stadium_seats: Optional[int] = None
+    current_transfer_record: Optional[int] = None
     current_market_value: Optional[int] = None
     confederation: Optional[str] = None
     fifa_world_ranking: Optional[str] = None
-    squad: ClubSquad
-    league: ClubLeague
+    squad: Optional[ClubSquad] = None
+    league: Optional[ClubLeague] = None
     historical_crests: Optional[list[str]] = []

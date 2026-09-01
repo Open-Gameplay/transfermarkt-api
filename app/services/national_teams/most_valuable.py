@@ -14,7 +14,7 @@ class TransfermarktMostValuableNationalTeams(TransfermarktBase):
     URL: str = "https://www.transfermarkt.com/vereins-statistik/wertvollstenationalmannschaften/marktwertetop?page={page_number}"
 
     def __get_page(self, page_number: int):
-        url = self.URL.format(page_number=page_number)
+        self.URL = self.URL.rsplit("=", 1)[0] + f"={page_number}"
         self.page = self.request_url_page()
         return self.page
 

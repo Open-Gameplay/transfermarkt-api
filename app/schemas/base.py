@@ -12,7 +12,7 @@ class AuditMixin(BaseModel):
 
 
 class TransfermarktBaseModel(BaseModel):
-    model_config = ConfigDict(alias_generator=to_camel)
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
     @field_validator(
         "date_of_birth",
@@ -54,7 +54,13 @@ class TransfermarktBaseModel(BaseModel):
         mode="before",
         check_fields=False,
     )
-    def parse_str_to_int(cls, v: str) -> Optional[int]:
+    def parse_str_to_int(cls, v) -> Optional[int]:
+        if v is None:
+            return None
+        if isinstance(v, int):
+            return v
+        if isinstance(v, float):
+            return int(v)
         if not v or not any(char.isdigit() for char in v):
             return None
 
@@ -79,7 +85,14 @@ class TransfermarktBaseModel(BaseModel):
             return int(float(value_str))
 
     @field_validator("height", mode="before", check_fields=False)
-    def parse_height(cls, v: str) -> Optional[int]:
+    def parse_height(cls, v) -> Optional[int]:
+        if v is None:
+            return None
+        if isinstance(v, (int, float)):
+            # tmapi returns float like 1.91 (meters), convert to cm
+            if isinstance(v, float) and v < 3:
+                return int(v * 100)
+            return int(v)
         if not v or not any(char.isdigit() for char in v):
             return None
         # TM uses locale-dependent formats: "1,83m", "1.83m", "1'83m", "1′83m"

@@ -17,7 +17,7 @@ class TransfermarktClubProfile(TransfermarktBase):
     """
 
     club_id: str = None
-    URL: str = "https://www.transfermarkt.us/-/datenfakten/verein/{club_id}"
+    URL: str = "https://www.transfermarkt.com/-/datenfakten/verein/{club_id}"
 
     def __post_init__(self) -> None:
         """Initialize the TransfermarktClubProfile class."""
@@ -48,7 +48,9 @@ class TransfermarktClubProfile(TransfermarktBase):
         self.response["fax"] = self.get_text_by_xpath(Clubs.Profile.FAX)
         self.response["website"] = self.get_text_by_xpath(Clubs.Profile.WEBSITE)
         self.response["foundedOn"] = self.get_text_by_xpath(Clubs.Profile.FOUNDED_ON)
-        self.response["members"] = self.get_text_by_xpath(Clubs.Profile.MEMBERS)
+        self.response["members"] = remove_str(
+            self.get_text_by_xpath(Clubs.Profile.MEMBERS), "."
+        )
         self.response["membersDate"] = safe_regex(
             self.get_text_by_xpath(Clubs.Profile.MEMBERS_DATE),
             REGEX_MEMBERS_DATE,
