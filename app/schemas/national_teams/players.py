@@ -11,6 +11,7 @@ class NationalTeamPlayer(TransfermarktBaseModel):
     age: Optional[int] = None
     club: Optional[str] = None
     market_value: Optional[int] = None
+    image_url: Optional[str] = None
 
 
 class NationalTeamPlayers(TransfermarktBaseModel, AuditMixin):

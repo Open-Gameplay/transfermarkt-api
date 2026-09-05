@@ -41,8 +41,10 @@ class TransfermarktNationalTeamPlayers(TransfermarktBase):
             age = row.xpath(NationalTeams.Players.AGE)
             club_name = row.xpath(NationalTeams.Players.CLUB_NAME)
             market_value = row.xpath(NationalTeams.Players.MARKET_VALUE)
+            photo = row.xpath(NationalTeams.Players.PHOTO)
 
             player_url = player_url[0].strip() if player_url else None
+            image_url = photo[0].strip().split("?")[0] if photo else None
             players.append(
                 {
                     "id": extract_from_url(player_url) if player_url else None,
@@ -52,6 +54,7 @@ class TransfermarktNationalTeamPlayers(TransfermarktBase):
                     "age": age[0].strip() if age else None,
                     "club": club_name[0].strip() if club_name else None,
                     "marketValue": market_value[0].strip() if market_value else None,
+                    "imageUrl": image_url,
                 }
             )
 

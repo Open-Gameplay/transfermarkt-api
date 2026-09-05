@@ -220,6 +220,7 @@ class NationalTeams:
         AGE = ".//td[contains(@class, 'zentriert')][2]//text()"
         CLUB_NAME = ".//td[contains(@class, 'zentriert')]//a//img//@title"
         MARKET_VALUE = ".//td[contains(@class, 'rechts') and contains(@class, 'hauptlink')]//a//text()"
+        PHOTO = ".//img[contains(@data-src, 'portrait')]/@data-src"
 
 
 class Pagination:
