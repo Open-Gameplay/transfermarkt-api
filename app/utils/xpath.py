@@ -217,8 +217,11 @@ class NationalTeams:
         PLAYER_NAME = ".//td[contains(@class, 'hauptlink')]//a[contains(@href, '/profil/spieler/')]/text()"
         SHIRT_NUMBER = ".//td[contains(@class, 'rueckennummer')]//text()"
         POSITION = ".//td[contains(@class, 'rueckennummer')]/@title"
+        DOB_AGE = ".//td[contains(@class, 'zentriert')][2]//text()"
         AGE = ".//td[contains(@class, 'zentriert')][2]//text()"
         CLUB_NAME = ".//td[contains(@class, 'zentriert')]//a//img//@title"
+        HEIGHT = ".//td[contains(@class, 'zentriert')][4]//text()"
+        FOOT = ".//td[contains(@class, 'zentriert')][5]//text()"
         MARKET_VALUE = ".//td[contains(@class, 'rechts') and contains(@class, 'hauptlink')]//a//text()"
         PHOTO = ".//img[contains(@data-src, 'portrait')]/@data-src"
 

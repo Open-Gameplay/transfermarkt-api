@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
 from app.services.base import TransfermarktBase
-from app.utils.utils import extract_from_url
+from app.utils.regex import REGEX_DOB
+from app.utils.utils import extract_from_url, safe_regex
 from app.utils.xpath import NationalTeams
 
 
@@ -17,7 +18,7 @@ class TransfermarktNationalTeamPlayers(TransfermarktBase):
 
     team_id: str = None
     season_id: str = None
-    URL: str = "https://www.transfermarkt.com/-/kader/verein/{team_id}/saison_id/{season_id}"
+    URL: str = "https://www.transfermarkt.com/-/kader/verein/{team_id}/saison_id/{season_id}/plus/1"
 
     def __post_init__(self) -> None:
         self.URL = self.URL.format(team_id=self.team_id, season_id=self.season_id or "")
@@ -38,21 +39,40 @@ class TransfermarktNationalTeamPlayers(TransfermarktBase):
             player_name = row.xpath(NationalTeams.Players.PLAYER_NAME)
             shirt_number = row.xpath(NationalTeams.Players.SHIRT_NUMBER)
             position = row.xpath(NationalTeams.Players.POSITION)
-            age = row.xpath(NationalTeams.Players.AGE)
+            dob_age = row.xpath(NationalTeams.Players.DOB_AGE)
             club_name = row.xpath(NationalTeams.Players.CLUB_NAME)
+            height_raw = row.xpath(NationalTeams.Players.HEIGHT)
+            foot = row.xpath(NationalTeams.Players.FOOT)
             market_value = row.xpath(NationalTeams.Players.MARKET_VALUE)
             photo = row.xpath(NationalTeams.Players.PHOTO)
 
             player_url = player_url[0].strip() if player_url else None
             image_url = photo[0].strip().split("?")[0] if photo else None
+
+            dob_text = dob_age[0].strip() if dob_age else None
+            dob, age = (None, None)
+            if dob_text:
+                dob, age = safe_regex(dob_text, REGEX_DOB, "dob"), safe_regex(dob_text, REGEX_DOB, "age")
+
+            height = None
+            if height_raw:
+                h = height_raw[0].strip().replace(",", ".").replace("m", "")
+                try:
+                    height = int(float(h) * 100)
+                except (ValueError, TypeError):
+                    height = None
+
             players.append(
                 {
                     "id": extract_from_url(player_url) if player_url else None,
                     "name": player_name[0].strip() if player_name else None,
                     "shirtNumber": shirt_number[0].strip() if shirt_number else None,
                     "position": position[-1].strip() if position else None,
-                    "age": age[0].strip() if age else None,
+                    "dateOfBirth": dob,
+                    "age": age,
                     "club": club_name[0].strip() if club_name else None,
+                    "height": height,
+                    "foot": foot[0].strip() if foot else None,
                     "marketValue": market_value[0].strip() if market_value else None,
                     "imageUrl": image_url,
                 }
