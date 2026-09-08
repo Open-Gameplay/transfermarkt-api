@@ -12,9 +12,18 @@ This file provides guidance to agents working with code in this repository.
 
 **Актуальная картина проекта живёт в вики: `docs/wiki/index.md` — начинать оттуда.**
 
+## Место в пайплайне данных
+
+Сводный договор конвейера TM → GameplayFootball — вики GameplayFootball,
+`../GameplayFootball/docs/wiki/пайплайн-данных.md`. Роль: самое верхнее звено ленты —
+FastAPI-обёртка над живым скрейпингом transfermarkt.com. Файлов не пишет; JSON-эндпоинты
+потребляет только transfermarkt_scrapper. Менять контракт эндпоинтов — синхронно с миграцией
+скрейпера.
+
 ## Ядро архитектуры
 
-- Точка входа — `app/main.py` (uvicorn на :8000, slowapi-лимит). Роуты — `app/api/endpoints/`.
+- Точка входа — `app/main.py` (uvicorn: отдельно — :8000, под скрейпером — :8001, см. «Сборка /
+  запуск»; slowapi-лимит). Роуты — `app/api/endpoints/`.
 - **Каждый вызов эндпоинта = живой запрос к TM** (XPath-скрейпинг, `requests` + `lxml`), кэша нет.
 - Слои: `endpoints` (FastAPI) → `services/` (dataclass-скрейперы, базовый `TransfermarktBase`) →
   `schemas/` (pydantic v2). `utils/xpath.py` — все XPath-константы, `utils/regex.py` — регулярки.
@@ -44,7 +53,18 @@ python -m venv .venv
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Swagger: http://127.0.0.1:8000/docs
+**Под скрейпер api поднимается на :8001.** Соседний `transfermarkt_scrapper` берёт
+`API_BASE` по умолчанию `http://127.0.0.1:8001` (переопределяется через `TM_API_BASE`). Для
+zero-config связки поднимай api именно на 8001:
+
+```bash
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
+```
+
+Либо, если api остался на 8000, задай скрейперу `TM_API_BASE=http://127.0.0.1:8000`. Отдельно
+api слушает 8000 (дефолт `uvicorn.run` в `app/main.py` и Swagger ниже).
+
+Swagger: http://127.0.0.1:8000/docs (на 8001 — http://127.0.0.1:8001/docs)
 
 ## Устройство вики
 
