@@ -217,6 +217,7 @@ class NationalTeams:
         PLAYER_NAME = ".//td[contains(@class, 'hauptlink')]//a[contains(@href, '/profil/spieler/')]/text()"
         SHIRT_NUMBER = ".//td[contains(@class, 'rueckennummer')]//text()"
         POSITION = ".//td[contains(@class, 'rueckennummer')]/@title"
+        FINE_POSITION = ".//table[contains(@class,'inline-table')]//tr[2]//td//text()"
         DOB_AGE = ".//td[contains(@class, 'zentriert')][2]//text()"
         AGE = ".//td[contains(@class, 'zentriert')][2]//text()"
         CLUB_NAME = ".//td[contains(@class, 'zentriert')]//a//img//@title"

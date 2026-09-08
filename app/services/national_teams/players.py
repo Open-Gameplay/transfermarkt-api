@@ -39,6 +39,11 @@ class TransfermarktNationalTeamPlayers(TransfermarktBase):
             player_name = row.xpath(NationalTeams.Players.PLAYER_NAME)
             shirt_number = row.xpath(NationalTeams.Players.SHIRT_NUMBER)
             position = row.xpath(NationalTeams.Players.POSITION)
+            fine_position = row.xpath(NationalTeams.Players.FINE_POSITION)
+            # precise position lives in the row's inline-table; the jersey-number
+            # title (coarse "Defender"/"Midfield"/"Attack") is only a fallback
+            precise_position = (fine_position[-1].strip() if fine_position
+                                else (position[-1].strip() if position else None))
             dob_age = row.xpath(NationalTeams.Players.DOB_AGE)
             club_name = row.xpath(NationalTeams.Players.CLUB_NAME)
             height_raw = row.xpath(NationalTeams.Players.HEIGHT)
@@ -67,7 +72,7 @@ class TransfermarktNationalTeamPlayers(TransfermarktBase):
                     "id": extract_from_url(player_url) if player_url else None,
                     "name": player_name[0].strip() if player_name else None,
                     "shirtNumber": shirt_number[0].strip() if shirt_number else None,
-                    "position": position[-1].strip() if position else None,
+                    "position": precise_position,
                     "dateOfBirth": dob,
                     "age": age,
                     "club": club_name[0].strip() if club_name else None,
